@@ -120,7 +120,9 @@ if __name__ == "__main__":
         raise FileNotFoundError(f"No suitable (.dat) files found in \"{sys.argv[1]}\" for conversion!")
 
     print()
-    print(f"{file_qty} files found. Starting processing...")
+    print(f"--- {file_qty} files were found and will be processed ---")
+    if not verbose:
+        print("Processing...")
 
     for f in folder.glob("*.dat"):
         if verbose:
