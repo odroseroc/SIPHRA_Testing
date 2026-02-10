@@ -1,4 +1,6 @@
 from pathlib import Path
+import argparse
+from tqdm import tqdm
 import sys
 import os
 import numpy as np
@@ -99,44 +101,72 @@ def process_events(f, crystal_code):
     output = filepath.with_suffix('.csv')
     dataset.to_csv(output)
 
+def build_parser():
+    parser = argparse.ArgumentParser(
+        prog='OR_DatToCSV',
+        description='Converts .dat files obtained from SIPHRA to .csv',
+        usage='%(prog)s PATH',
+    )
+    parser.add_argument("path",
+                        help="Path to .dat file or directory containing multiple .dat files")
+    parser.add_argument("-v", "--verbose",
+                        action="store_true",
+                        help="only available for folder processing. Print information about every individual file")
+    parser.add_argument("--process_all",
+                        action="store_true",
+                        help="convert all .dat files in the directory, even if they already have a matching .csv file", )
+    return parser
+
+def process_file(file, log_fn):
+    log_fn("")
+    log_fn(f"Target file \"{file.name}\" found.")
+    log_fn("Processing...")
+    process_events(file, 0)
+    log_fn(f"Wrote file \"{file.stem}.csv\"!")
+    log_fn("")
+
+
+def find_lonely_dat_files(directory):
+    '''
+    Returns a list with the paths of .dat files that have no matching .csv
+    file in the specified directory.
+    '''
+    files = []
+    for file in directory.glob('*.dat'):
+        if not file.with_suffix('.csv').is_file():
+            files.append(file)
+    return sorted(files)
+
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    args = build_parser().parse_args()
+
+    def vprint(msg):
+        if args.verbose:
+            print(msg)
+
+    path = Path(args.path).resolve()
+    if not path.exists():
+        raise FileNotFoundError(f"Path {path} not found!")
+
+    if path.is_file():
+        process_file(path, print)
+        print("Done! 1 file converted to CSV.")
+
+    if path.is_dir():
+        if not args.process_all:
+            files = find_lonely_dat_files(path)
+            if len(files) == 0:
+                sys.exit("All .dat files contain a matching .csv file. If you want to convert all files again execute with flag --process_all")
+        else:
+            files = sorted(path.glob('*.dat'))
+        qty = len(files)
         print()
-        print("Error! Please pass Siphra data file as argument!")
-        print()
-        sys.exit(1)
-
-    folder =  Path(sys.argv[1]).resolve()
-    if not folder.is_dir():
-        raise FileNotFoundError(f"File \"{sys.argv[1]}\" does not exist!")
-
-    verbose = False
-    if len(sys.argv) == 3:
-        verbose = True if sys.argv[2] == "-v" else False
-
-    file_qty = sum(1 for _ in folder.glob("*.dat"))
-    if file_qty == 0:
-        raise FileNotFoundError(f"No suitable (.dat) files found in \"{sys.argv[1]}\" for conversion!")
-
-    print()
-    print(f"--- {file_qty} files were found and will be processed ---")
-    if not verbose:
-        print("Processing...")
-
-    for f in folder.glob("*.dat"):
-        if verbose:
-            print()
-            print(f"Target file \"{f.name}\" found.")
-            print("Processing...")
-
-        process_events(f, 0)
-
-        if verbose:
-            print(f"Wrote file \"{f.parent}.csv\"!")
-
-    print()
-    print(f"Done! {file_qty} files converted to CSV.")
+        print(f"Found {qty} suitable files in directory \"{path.name}\".")
+        print("Starting conversion...")
+        for file in tqdm(files):
+            process_file(file, vprint)
+        print(f"Done! {qty} files converted to CSV.")
     print()
 
 
