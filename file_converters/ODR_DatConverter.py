@@ -28,7 +28,7 @@ def process_events_csv(f, crystal_code):
     b, e = os.path.splitext(n)
     filepath = f
     # newpath = f'{p}/ROOT_FILES'
-    # if not os.path.exists(newpath):
+    # if not os.filepath.exists(newpath):
     #    os.makedirs(newpath)
 
     i = 0
@@ -108,7 +108,7 @@ def build_parser():
         description='Converts .dat files obtained from SIPHRA to .csv',
         usage='%(prog)s PATH [options]',
     )
-    parser.add_argument("path",
+    parser.add_argument("filepath",
                         help="Path to .dat file or directory containing multiple .dat files")
     parser.add_argument("-v", "--verbose",
                         action="store_true",

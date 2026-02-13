@@ -26,7 +26,7 @@ def process_events(f, crystal_code):
     p,n = os.path.split(f)
     b,e = os.path.splitext(n)
     #newpath = f'{p}/ROOT_FILES' 
-    #if not os.path.exists(newpath):
+    #if not os.filepath.exists(newpath):
     #    os.makedirs(newpath)
 
     i = 0
