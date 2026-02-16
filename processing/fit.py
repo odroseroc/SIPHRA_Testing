@@ -1,20 +1,25 @@
 import ROOT
 
-def gauspeak(n_init):
+def gauspeak(n_init: int):
     return f"[{n_init}]*TMath::Gaus(x, [{n_init+1}], [{n_init+2}])"
 
-def bg_exp(n_init):
+def bg_exp(n_init: int):
     return f"[{n_init}]*TMath::Exp(-x/[{n_init+1}])"
 
 def peak_and_bg():
     return f"{bg_exp(0)}+{gauspeak(2)}"
 
-def fit_peak_expbg(hsit, name, xl, xr, norm, mean, sigma=70, const=200, denom=200, showFit=False, keep_prev_fncs=True):
+def fit_peak_expbg(hist: ROOT.TF1,
+                   name: str,
+                   xl: float, xr: float,
+                   norm: float, mean: float, sigma: float =70,
+                   const: float=200, denom=200,
+                   showFit: bool =False, keep_prev_fncs: bool =True):
     '''
     Fits a gaussian peak in a part of a spectrum assuming exponentially decaying background.
     Parameters
     ----------
-    hsit : ROOT.TH1F
+    hist : ROOT.TH1F
         Histogram of spectrum
     name : str
         Name for the fit function

@@ -145,7 +145,7 @@ if __name__ == "__main__":
         if args.verbose:
             print(msg)
 
-    path = Path(args.path).resolve()
+    path = Path(args.filepath).resolve()
     if not path.exists():
         raise FileNotFoundError(f"Path {path} not found!")
 

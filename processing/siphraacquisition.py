@@ -1,27 +1,15 @@
-import ROOT
-import numpy as np
 import pandas as pd
-from collections import UserDict
 from typing import TypeVar
 from pathlib import Path
-import os
 
 PathLike = TypeVar("PathLike", str, Path, None)
-
-class ChDataDict(UserDict):
-    def __setitem__(self, key, value):
-        if not isinstance(key, int):
-            raise TypeError("Key must be an integer")
-        if not isinstance(value, np.ndarray):
-            raise TypeError("Value must be a numpy array")
-        super().__setitem__(key, value)
 
 class SiphraAcquisition:
     '''
     Class to store information about SIPHRA acquisitions and load data efficiently.
     '''
 
-    ch_strs = [f"Ch{_}" for _ in range(17)]
+    ch_strs = [f"Ch{_}" for _ in range(17)] # Names of the channels in the dataframe.
 
     def __init__(self, filepath: PathLike,
                  active_chs:int | list[int],
@@ -50,9 +38,9 @@ class SiphraAcquisition:
         if all(isinstance(_, int) and 1 <= _ <= 16 for _ in channels):
             return channels
         else:
-            raise ValueError("active_chs should be an int or list of integers between 1 and 16")
+            raise ValueError("Channels outside the allowed range (1 - 16)")
 
-    def read_column(self, col_name: str) -> np.ndarray:
+    def _read_column(self, col_name: str) -> numpy.ndarray:
         try:
             if self.filepath.suffix == '.csv':
                 return pd.read_csv(self.filepath, usecols=[col_name])[col_name].to_numpy()
@@ -63,22 +51,48 @@ class SiphraAcquisition:
                 del df
                 return data
         except Exception as e:
-            raise ValueError(f"Column {col_name} not found in file {self.filepath.name}")
+            raise ValueError(f"Cannot retrieve data from field {col_name} in file {self.filepath.name}: {e}")
 
-    def get_ch_data(self, ch: int) -> np.ndarray:
-        return self.read_column(self.ch_strs[ch])
+    # def _get_ch_data(self, ch: int) -> np.ndarray:
+    #     return self._read_column(self.ch_strs[ch])
 
-    def get_active_chs_data(self):
-        if len(self.active_chs) == 1:
-            return self.get_ch_data(self.active_chs[0])
-
-        active_chs_data = ChDataDict()
+    def _get_active_chs_data(self):
+        '''
+        Returns a dict whose keys are the channel numbers and whose values are
+        numpy.ndarrays containig the corresponding acquisition data of that channel.
+        '''
+        # if len(self.active_chs) == 1:
+        #     return self._read_column(self.ch_strs(self.active_chs[0]))
+        active_chs_data = {}
         for ch in self.active_chs:
-            active_chs_data[ch] = (self.get_ch_data(ch))
-
+             active_chs_data[ch] = self._read_column(self.ch_strs[ch])
         return active_chs_data
 
-    def get_dataset(self):
+    def __getitem__(self, items):
+        if any(items == _ for _ in ('active', 'a', 'A')):
+            return self._get_active_chs_data()
+
+        elif any(items == _ for _ in ('s', '+', 'S')):
+            return self._read_column('Summed')
+
+        elif isinstance(items, (int, str)):
+            col_name = self.ch_strs[items] if isinstance(items, int) else items
+            return self._read_column(col_name)
+
+        elif isinstance(items, list) and all(isinstance(item, int) for item in items):
+            data = {}
+            for ch in items:
+                data[ch] = self._read_column(self.ch_strs[ch])
+            return data
+
+        elif isinstance(items, list) and all(isinstance(item, (int, str)) for item in items):
+            data = {}
+            for item in items:
+                col_name = self.ch_strs[item] if isinstance(item, int) else item
+                data[col_name] = self._read_column(col_name)
+            return data
+
+    def as_dataset(self):
         file_type = self.filepath.suffix
         if file_type == ".csv":
             return pd.read_csv(self.filepath)
