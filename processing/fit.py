@@ -1,3 +1,5 @@
+# (C) Oscar Rosero, KTH 2026
+
 import ROOT
 
 def gauspeak(n_init: int):

@@ -1,3 +1,5 @@
+# (C) Oscar Rosero, KTH
+
 import pandas as pd
 from typing import TypeVar
 from pathlib import Path
@@ -6,7 +8,11 @@ PathLike = TypeVar("PathLike", str, Path, None)
 
 class SiphraAcquisition:
     '''
-    Class to store information about SIPHRA acquisitions and load data efficiently.
+    Class to handle SIPHRA data acquisitions efficiently using on-demand (lazy) loading.
+
+    This class provides an interface to access data from large .csv or .pkl files without loading the entire dataset
+    into memory. It also allows to store information about the active channels, exposure time and SiPM channels used,
+    and allows for flexible data retrieval via dictionary-like indexing or direct methods.
     '''
 
     ch_strs = [f"Ch{_}" for _ in range(17)] # Names of the channels in the dataframe.
@@ -69,6 +75,50 @@ class SiphraAcquisition:
         return active_chs_data
 
     def __getitem__(self, items):
+        '''
+        Retrieve channel data using flexible indexing syntax.
+
+        This method enables dictionary.like access to the acquisition data. It interprets the input 'items' to determine
+        whether to return a single channel, a specific subset, a list of mixed identifiers, or special aggregates like
+        the active-channels set or the summed spectrum.
+
+        Parameters
+        ----------
+        items: int, str, list, or tuple-like
+            The identifier(s) for the data to be retrieved. Accepted formats include:
+            * **int**: Channel number (e.g., ``5`` for ``Ch5``),
+            * **str**: Actual name of the register in the original file (e.g., ``'Ch2'``, ``'Trigger'``, ``'Temp'``)
+            or special key (see table below).
+            * **list[int]**: List of channel numbers (e.g., ``[1, 5, 10]``).
+            * **list[str] or list[int/str]**: Mixed list of register names and channel numbers (e.g., ``['Argmax', 5,
+            10, 'Trigger']``).
+
+        Returns
+        -------
+        numpy.ndarray or dict
+            * If a single channel is requested (int or str), returns a :class:`numpy.ndarray` containing the data.
+            * If a list of channels is requested via a list of integers, returns a ``dict`` where keys are the number
+            of the channel and values are :class:`numpy.ndarray` containing the data.
+            * If a list of registers is requested via a mixed list or a list of strings, returns a ``dict`` where keys
+            are the name of the register and values are :class:`numpy.ndarray` containing the data.
+
+        Notes
+        -----
+        ** Special Keys **
+        The following string keys trigger specific retrieval modes:
+
+        +------------------+-----------------------------------------------------------------+
+        | Key              | Description                                                     |
+        +==================+=================================================================+
+        | ``'active'``     | Retrieves all channels defined in ``self.active_chs``. Returns  |
+        | ``'a'``          | a dictionary whose keys are the (int) channel numbers.          |
+        | ``'A'``          |                                                                 |
+        +------------------+-----------------------------------------------------------------+
+        | ``'s'``          | Retrieves the 'Summed' register from the original file. Returns |
+        | ``'+'``          | a numpy array.                                                  |
+        | ``'S'``          |                                                                 |
+        +------------------+-----------------------------------------------------------------+
+        '''
         if any(items == _ for _ in ('active', 'a', 'A')):
             return self._get_active_chs_data()
 
