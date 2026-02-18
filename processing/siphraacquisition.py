@@ -1,4 +1,9 @@
-# (C) Oscar Rosero, KTH
+# *****************************************************************************
+#   Description: Definition of the :class:`SiphraAcquisition` to handle SIPHRA
+#   data efficiently.
+#   Written by: Oscar Rosero (KTH)
+#....
+#   Date: 02/2026
 
 import pandas as pd
 from typing import TypeVar
@@ -8,7 +13,7 @@ PathLike = TypeVar("PathLike", str, Path, None)
 
 class SiphraAcquisition:
     '''
-    Class to handle SIPHRA data acquisitions efficiently using on-demand (lazy) loading.
+    Class to handle SIPHRA data from acquisitions efficiently using on-demand (lazy) loading.
 
     This class provides an interface to access data from large .csv or .pkl files without loading the entire dataset
     into memory. It also allows to store information about the active channels, exposure time and SiPM channels used,

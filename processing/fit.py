@@ -1,4 +1,9 @@
-# (C) Oscar Rosero, KTH 2026
+# *****************************************************************************
+#   Description: A set of utilities to ease SIPHRA spectra analysis.
+#   Implements PyROOT dependencies.
+#   Written by: Oscar Rosero (KTH)
+#....
+#   Date: 02/2026
 
 import ROOT
 
