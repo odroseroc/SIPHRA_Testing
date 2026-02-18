@@ -150,19 +150,19 @@ def build_parser():
     parser.add_argument("path",
                         help="Path to .dat file or directory containing multiple .dat files",
                         type=Path,)
-    parser.add_argument("--cc", "--crystal_code",
-                        help="The crystal code to use. Integer between 0 and 4",
-                        default=0,
-                        type=int,)
     parser.add_argument("-o", "--output",
                         default='',
                         help="Path to output file")
     parser.add_argument("-v", "--verbose",
                         action="store_true",
                         help="print information about every individual file processed")
-    parser.add_argument("--process_all",
+    parser.add_argument("-a", "--process_all",
                         action="store_true",
-                        help="convert all .dat files in the directory, even if they already have a matching .csv file", )
+                        help="convert all .dat files in the directory, even if they already have a matching CSV or PKL file", )
+    parser.add_argument("--cry",
+                        help="The crystal code to use. Integer between 0 and 4. Default is 0",
+                        default=0,
+                        type=int, )
     parser.add_argument("--pkl",
                         action="store_true",
                         help="Output a pkl file")
@@ -210,16 +210,16 @@ if __name__ == "__main__":
         # print("entered handle_outputs")
         if suffix_lst[CSV] in output_suffixes:
             data.to_csv(output_path.with_suffix(suffix_lst[CSV]), index=False)
-            vprint(f"Wrote {output_path.with_suffix(suffix_lst[CSV])}")
+            vprint(f"Wrote:\n\t\"{output_path.with_suffix(suffix_lst[CSV])}\"")
         if suffix_lst[PKL] in output_suffixes:
             data.to_pickle(output_path.with_suffix(suffix_lst[PKL]))
-            vprint(f"Wrote {output_path.with_suffix(suffix_lst[PKL])}")
+            vprint(f"Wrote:\n\t\"{output_path.with_suffix(suffix_lst[PKL])}\"")
 
+    print("\t\t-----------------------------------------------------------")
+    print("\t\t|               SIPHRA .dat files converter               |")
+    print("\t\t----------------------------------------------------------- ")
 
     args = build_parser().parse_args()
-
-    print(args.verbose)
-    vprint(f"{args.verbose=}")
 
     input_path = args.path.resolve()
     if not input_path.exists():
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     # print(f"{args.pkl=}, {args.csv=}, {output_path=}")
     # print(f"Condition evaluated: {args.pkl and not args.csv and not output_path or not output_path.suffix}, {output_path=}")
     if not args.pkl and not args.csv and not output_path.suffix:
-        print("\nNo output format has been specified.\n Using default format: CSV")
+        print("\nNo output format has been specified.\n\tUsing default format: CSV")
         output_suffixes.append(suffix_lst[CSV])
         output_path = output_path.with_suffix(suffix_lst[CSV])
     else:
@@ -242,14 +242,13 @@ if __name__ == "__main__":
         if not output_path.parent.is_dir():
             print("\nThe specified output folder does not exist! Defaulting to same directory as input file.\n")
             output_path = input_path.parent/output_path.stem if input_path.is_file() else input_path
-    print(f"{output_suffixes=}")
 
     # Convert single file
     if input_path.is_file():
-        vprint(f"Target file \"{input_path}\" found.")
+        vprint(f"\nTarget file:\n\t\"{input_path}\"")
         vprint("Processing...")
         data = process_events(input_path,
-                              crystal_code=args.cc,
+                              crystal_code=args.cry,
                               subtract_baselines=args.sb,
                               get_external=args.pf,)
         handle_outputs(data, output_suffixes, output_path)
@@ -268,15 +267,17 @@ if __name__ == "__main__":
         print(f"Found {qty} suitable files in directory \"{input_path.name}\".")
         print("Starting conversion...")
         for file in tqdm(files):
-            vprint(f"Target file \"{input_path}\" found.")
+            vprint(f"\nTarget file:\n\t\"{file}\"")
             vprint("Processing...")
-            data = process_events(input_path,
-                                  crystal_code=args.cc,
+            data = process_events(file,
+                                  crystal_code=args.cry,
                                   subtract_baselines=args.sb,
                                   get_external=args.pf, )
             handle_outputs(data, output_suffixes, file)
             vprint('')
         print(f"Done! {qty} files converted.")
+    if args.sb:
+        print("\nWARNING: Please note that baseline subtraction has been performed in every channel!\n")
     print()
 
 
