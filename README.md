@@ -1,6 +1,6 @@
 # SIPHRA Analysis Tools
 
-Set of Python tools and scripts required to test and analyze the output of the SIPHRA ASIC, used for the readout of SiPM signals.
+Set of Python tools and scripts required to test and analyze the output of the [SIPHRA ASIC](https://www.ideas.no/integrated-circuits/ide3380), used for the readout of SiPM signals.
 ## 📊 Analysis
 
 All detailed analysis results and visualizations can be found in the notebooks/ directory.
