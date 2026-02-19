@@ -83,8 +83,12 @@ def process_events(f, crystal_code, subtract_baselines=False, get_external=False
     det_a_internal[:, 6] = temp(det_a_internal[:,6], pt100_calib[1, crystal_code], pt100_calib[0, crystal_code])
 
     if subtract_baselines:
-        det_a_baselines = np.mean(det_a_external[:, 6:-2], axis=0, dtype=np.uint32)
-        det_a_internal[:,6:-2] -= det_a_baselines
+        print(f"Number of Ext. HOLD events: {det_a_external.shape[0]}")
+        print(f"Baselines: {det_a_external[:, 6:-2]}")
+        det_a_baselines = np.mean(det_a_external[:, 6:-2], axis=0, dtype=np.float64)
+        print(f"{det_a_baselines=}")
+        det_a_internal[:,6:-2] = np.maximum(det_a_internal[:,6:-2].astype(np.float64) - det_a_baselines, 0).astype(np.uint32)
+        print(f"Subtracted readings: {det_a_internal[:,6:-2]}")
 
     # Summing performed after baseline subtraction
     det_a_internal[:, -1] = summed_channel(det_a_internal[:, 7:-2])
@@ -143,12 +147,12 @@ def summed_channel(ch_values: np.ndarray) -> np.ndarray:
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        prog='OR_DatToCSV',
-        description='Converts .dat files obtained from SIPHRA to .csv',
+        prog='ODR_DatConverter',
+        description='Converts \'.dat\' files obtained from SIPHRA to \'.csv\'',
         usage='%(prog)s PATH [options]',
     )
     parser.add_argument("path",
-                        help="Path to .dat file or directory containing multiple .dat files",
+                        help="Path to \'.dat\' file or directory containing multiple \'.dat\' files",
                         type=Path,)
     parser.add_argument("-o", "--output",
                         default='',
@@ -156,36 +160,34 @@ def build_parser():
     parser.add_argument("-v", "--verbose",
                         action="store_true",
                         help="print information about every individual file processed")
-    parser.add_argument("-a", "--process_all",
+    parser.add_argument("-a", "--process-all",
                         action="store_true",
-                        help="convert all .dat files in the directory, even if they already have a matching CSV or PKL file", )
+                        help="convert all \'.dat\' files in the directory, even if they already have a matching \'.csv\' or \'.pkl\' file", )
     parser.add_argument("--cry",
                         help="The crystal code to use. Integer between 0 and 4. Default is 0",
                         default=0,
                         type=int, )
     parser.add_argument("--pkl",
                         action="store_true",
-                        help="Output a pkl file")
+                        help="Convert to \'.pkl\' file(s)")
     parser.add_argument("--csv",
                         action="store_true",
-                        help="Output a csv file")
-    parser.add_argument("--pf", "--pedestal_file",
-                        action="store_true",
-                        help="In addition to the events file, output the file containing only readings triggered from external HOLD, i.e. the pedestal")
-    parser.add_argument("--sb", "--subtract_baselines",
+                        help="Convert to \'.csv\' file(s)")
+    parser.add_argument("--sb", "--subtract-baselines",
                         action="store_true",
                         help="Subtract the baseline in every channel")
+    parser.add_argument("--bf", "--baseline-file",
+                        action="store_true",
+                        help="In addition to the events file, output the file containing only readings triggered from external HOLD, i.e. the baseline")
     return parser
 
 def find_lonely_dat_files(directory, suffixes=None):
     '''
-    Returns a list with the paths of .dat files that have no matching .csv or
-    . pkl file in the specified directory.
-    :param directory: Path to directory containing .dat files
-    :param suffixes: List containing the file extensions. If a .dat file in the
-    directory has the same name as an existing file with extension in
-    ´´suffixes´´, it will not be added to the list of files to process.
-    :return: List of Paths to .dat files to be processed
+    Returns a list with the paths of .dat files that have no matching ``'.csv'`` or
+    ``'.pkl'`` file in the specified directory.
+    :param directory: Path to directory containing ``'.dat'`` files
+    :param suffixes: List containing the file extensions. If a ``'.dat'`` file in the directory has the same name as an existing file with extension in ``suffixes``, it will not be added to the list of files to process.
+    :return: List of Paths to ``'.dat'`` files to be processed
     '''
     if not suffixes:
         return sorted(directory.glob('*.dat'))
@@ -250,7 +252,7 @@ if __name__ == "__main__":
         data = process_events(input_path,
                               crystal_code=args.cry,
                               subtract_baselines=args.sb,
-                              get_external=args.pf,)
+                              get_external=args.bf,)
         handle_outputs(data, output_suffixes, output_path)
         print(f"\nDone! 1 file converted.")
 
@@ -259,32 +261,25 @@ if __name__ == "__main__":
         if not args.process_all:
             files = find_lonely_dat_files(input_path, output_suffixes)
             if len(files) == 0:
-                sys.exit("All \'.dat\' files contain a matching \'.csv\' or \'.pkl\' file. If you want to convert all files again execute with flag --process_all")
+                sys.exit("\nINFO: All \'.dat\' files in the directory contain a matching \'.csv\' or \'.pkl\' file. \n"
+                "      If you want to convert all files again execute with flag \'-a\'\n")
         else:
             files = find_lonely_dat_files(input_path, None)
         qty = len(files)
         print()
-        print(f"Found {qty} suitable files in directory \"{input_path.name}\".")
+        print(f"Found {qty} suitable files in directory \"{input_path.name}\".\n    ")
         print("Starting conversion...")
-        for file in tqdm(files):
+        progress_handler = tqdm(files) if not args.verbose else files
+        for file in progress_handler:
             vprint(f"\nTarget file:\n\t\"{file}\"")
             vprint("Processing...")
             data = process_events(file,
                                   crystal_code=args.cry,
                                   subtract_baselines=args.sb,
-                                  get_external=args.pf, )
+                                  get_external=args.bf,)
             handle_outputs(data, output_suffixes, file)
             vprint('')
         print(f"Done! {qty} files converted.")
     if args.sb:
         print("\nWARNING: Please note that baseline subtraction has been performed in every channel!\n")
     print()
-
-
-
-
-
-
-
-
-

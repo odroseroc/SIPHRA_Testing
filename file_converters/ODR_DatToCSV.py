@@ -103,7 +103,7 @@ def process_events(f, crystal_code):
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        prog='OR_DatToCSV',
+        prog='ODR_DatToCSV',
         description='Converts .dat files obtained from SIPHRA to .csv',
         usage='%(prog)s PATH',
     )

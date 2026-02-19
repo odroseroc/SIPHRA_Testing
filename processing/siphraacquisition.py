@@ -24,13 +24,15 @@ class SiphraAcquisition:
 
     def __init__(self, filepath: PathLike,
                  active_chs:int | list[int],
-                 exposure_sec:float,
-                 sipm_chs:str | None = None, ):
+                 exposure_sec:float = 1,
+                 sipm_chs:str | None = None,
+                 name: str | None = None,):
 
         self.filepath = self._resolve_path(filepath)
         self.active_chs = self._resolve_active_chs(active_chs)
         self.exposure = exposure_sec
         self.sipm_chs = sipm_chs
+        self.name = name
 
 
     def _resolve_path(self, f):
