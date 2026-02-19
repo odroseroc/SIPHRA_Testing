@@ -83,12 +83,8 @@ def process_events(f, crystal_code, subtract_baselines=False, get_external=False
     det_a_internal[:, 6] = temp(det_a_internal[:,6], pt100_calib[1, crystal_code], pt100_calib[0, crystal_code])
 
     if subtract_baselines:
-        print(f"Number of Ext. HOLD events: {det_a_external.shape[0]}")
-        print(f"Baselines: {det_a_external[:, 6:-2]}")
         det_a_baselines = np.mean(det_a_external[:, 6:-2], axis=0, dtype=np.float64)
-        print(f"{det_a_baselines=}")
         det_a_internal[:,6:-2] = np.maximum(det_a_internal[:,6:-2].astype(np.float64) - det_a_baselines, 0).astype(np.uint32)
-        print(f"Subtracted readings: {det_a_internal[:,6:-2]}")
 
     # Summing performed after baseline subtraction
     det_a_internal[:, -1] = summed_channel(det_a_internal[:, 7:-2])
