@@ -11,7 +11,4 @@ Raw datasets are not included in this repository due to GitHub storage limitatio
 
 ## 🛰️ Context
 
-This analysis is part of the prior qualification and testing for the BGO Spectrometer Unit of the COMCUBE mission, currently under development at KTH, Stockholm.
-
-### Publication: 
-   [COMCUBE mission details](https://doi.org/10.48550/arXiv.2510.24549)
+This analysis is part of the prior qualification and testing for the BGO Spectrometer Unit of the [COMCUBE mission]((https://doi.org/10.48550/arXiv.2510.24549), currently under development at KTH, Stockholm.
