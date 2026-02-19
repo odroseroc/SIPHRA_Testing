@@ -151,8 +151,8 @@ def build_parser():
                         help="Path to \'.dat\' file or directory containing multiple \'.dat\' files",
                         type=Path,)
     parser.add_argument("-o", "--output",
-                        default='',
-                        help="Path to output file")
+                        action="store",
+                        help="Path to output file (currently only available for single-file processing)")
     parser.add_argument("-v", "--verbose",
                         action="store_true",
                         help="print information about every individual file processed")
@@ -175,6 +175,11 @@ def build_parser():
     parser.add_argument("--bf", "--baseline-file",
                         action="store_true",
                         help="In addition to the events file, output the file containing only readings triggered from external HOLD, i.e. the baseline")
+    parser.add_argument("--prefix",
+                        action="store",
+                        help="the prefix to add to all the output files, even if no explicit output name is specified",
+                        type=str,
+                        )
     return parser
 
 def find_lonely_dat_files(directory, suffixes=None):
@@ -249,6 +254,7 @@ if __name__ == "__main__":
                               crystal_code=args.cry,
                               subtract_baselines=args.sb,
                               get_external=args.bf,)
+        if args.prefix: output_path = output_path.parent/(args.prefix+output_path.name)
         handle_outputs(data, output_suffixes, output_path)
         print(f"\nDone! 1 file converted.")
 
@@ -273,7 +279,8 @@ if __name__ == "__main__":
                                   crystal_code=args.cry,
                                   subtract_baselines=args.sb,
                                   get_external=args.bf,)
-            handle_outputs(data, output_suffixes, file)
+            if args.prefix: output_path = file.parent/(args.prefix+file.name)
+            handle_outputs(data, output_suffixes, output_path)
             vprint('')
         print(f"Done! {qty} files converted.")
     if args.sb:
