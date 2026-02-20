@@ -90,14 +90,15 @@ def process_events(f, crystal_code, subtract_baselines=False, get_external=False
     det_a_internal[:, -1] = summed_channel(det_a_internal[:, 7:-2])
 
     dataset_internal = dataset_from_arr(det_a_internal)
+    dataset_external = None
 
-    if not get_external:
-        dataset_external = None
-    else:
-        pass
-    # TODO: Implement returning the pedestal file
+    if get_external:
+        det_a_external[:, -2] = np.argmax(det_a_external[:, 7:-2], axis=1) + 1 # Highest-value channel
+        det_a_external[:,6] = temp(det_a_external[:,6], pt100_calib[1, crystal_code], pt100_calib[0, crystal_code])
+        det_a_external[:, -1] = summed_channel(det_a_external[:, 7:-2])
+        dataset_external = dataset_from_arr(det_a_external)
 
-    return dataset_internal
+    return dataset_internal, dataset_external
 
 def dataset_from_arr(arr: numpy.ndarray):
     '''
@@ -138,7 +139,7 @@ def summed_channel(ch_values: np.ndarray) -> np.ndarray:
     Receives an array with 16 columns containing the channels readings for each event.
     Rows: events     Columns: channel reading
     '''
-    # TODO: Define the summing algorithm. Currently it is just the addition of all the channels. Must be improved.
+    # TODO: Define the summing algorithm. Currently it is just the addition of all the channels. Should it be improved?.
     return np.sum(ch_values, axis=1)
 
 def build_parser():
@@ -177,7 +178,7 @@ def build_parser():
                         help="In addition to the events file, output the file containing only readings triggered from external HOLD, i.e. the baseline")
     parser.add_argument("--prefix",
                         action="store",
-                        help="the prefix to add to all the output files, even if no explicit output name is specified",
+                        help="the prefix to add to all the output file names, even if no explicit output name is specified",
                         type=str,
                         )
     return parser
@@ -219,8 +220,8 @@ if __name__ == "__main__":
             vprint(f"Wrote:\n\t\"{output_path.with_suffix(suffix_lst[PKL])}\"")
 
     print("\t\t-----------------------------------------------------------")
-    print("\t\t|               SIPHRA .dat files converter               |")
-    print("\t\t----------------------------------------------------------- ")
+    print("\t\t|               SIPHRA \'.dat\' files converter             |")
+    print("\t\t----------------------------------------------------------- \n")
 
     args = build_parser().parse_args()
 
@@ -250,13 +251,20 @@ if __name__ == "__main__":
     if input_path.is_file():
         vprint(f"\nTarget file:\n\t\"{input_path}\"")
         vprint("Processing...")
-        data = process_events(input_path,
+        data, baseline = process_events(input_path,
                               crystal_code=args.cry,
                               subtract_baselines=args.sb,
                               get_external=args.bf,)
-        if args.prefix: output_path = output_path.parent/(args.prefix+output_path.name)
+        output_path = output_path.parent/(args.prefix+output_path.name) if args.prefix else output_path
         handle_outputs(data, output_suffixes, output_path)
-        print(f"\nDone! 1 file converted.")
+        if args.bf:
+            vprint(f"---- INFO: Baseline file ...")
+            bl_output_path = output_path.parent / ('BASELINE_' + output_path.name)
+            try:
+                handle_outputs(baseline, output_suffixes, bl_output_path)
+            except Exception as e:
+                vprint(f"Baseline file could not be generated: {e}")
+        print(f"\nDone! 1 file processed.")
 
     # Convert files in a directory
     if input_path.is_dir():
@@ -275,14 +283,21 @@ if __name__ == "__main__":
         for file in progress_handler:
             vprint(f"\nTarget file:\n\t\"{file}\"")
             vprint("Processing...")
-            data = process_events(file,
+            data, baseline = process_events(file,
                                   crystal_code=args.cry,
                                   subtract_baselines=args.sb,
                                   get_external=args.bf,)
-            if args.prefix: output_path = file.parent/(args.prefix+file.name)
+            output_path = file.parent/(args.prefix+file.name) if args.prefix else file
             handle_outputs(data, output_suffixes, output_path)
+            if args.bf:
+                vprint(f"---- INFO: Generating baseline file ...")
+                bl_output_path = output_path.parent / ('BASELINE_' + output_path.name)
+                try:
+                    handle_outputs(baseline, output_suffixes, bl_output_path)
+                except Exception as e:
+                    vprint(f"Baseline file could not be generated: {e}")
             vprint('')
-        print(f"Done! {qty} files converted.")
+        print(f"Done! {qty} files processed.")
     if args.sb:
         print("\nWARNING: Please note that baseline subtraction has been performed in every channel!\n")
     print()
