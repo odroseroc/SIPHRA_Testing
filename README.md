@@ -21,6 +21,11 @@ The corresponding exposure times are reported in the table below:
 | 164.828 | 24.934 |
 | --- | --- |
 
+> [!NOTE]
+> The ``file_converters`` directory contains scripts for converting the raw datasets into a readable format. In particular, the ``ODR_DatConverter.py`` provides a comprehensive CLI tool to convert raw files into CSV or PKL formats. 
+>
+> The current analysis pipeline uses CSV files by default; however, this may change in the future.
+
 ## Context
 
 This analysis is part of the prior qualification and testing for the BGO Spectrometer Unit of the [COMCUBE-S mission](https://doi.org/10.48550/arXiv.2510.24549), currently under development at KTH, Stockholm.
