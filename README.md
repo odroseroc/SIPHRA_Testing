@@ -17,7 +17,7 @@ However, two sample datasets are provided in the ``data/test_data`` directory. T
 The corresponding exposure times are reported in the table below:
 
 | **Dataset** | **Exposure (s)** |
-| --- | --- |
+| --- | ---: |
 | Background | 164.828 
 | Source | 24.934 |
 
