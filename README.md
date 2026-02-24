@@ -7,7 +7,19 @@ All detailed analysis results and visualizations can be found in the notebooks/ 
 
 ## Datasets
 
-Raw datasets are not included in this repository due to GitHub storage limitations. If you require the data for reproduction or further analysis, please open an issue or contact one of the collaborators directly. Datasets may be made available upon request at a future stage.
+Raw datasets are not included in this repository due to repository size constraints on GitHub. If you require the data for reproduction or further analysis, please open an issue or contact one of the collaborators directly. 
+
+However, two sample datasets are provided in the ``data/test_data`` directory. These datasets are intended to provide an easy way to test functionalities and correspond to:
+
+* one background radiation acquisition and 
+* one acquisition performed in the presence of a $^{137}$Cs source.
+
+The corresponding exposure times are reported in the table below:
+
+| **Dataset** | **Exposure (s)** |
+| --- | --- |
+| 164.828 | 24.934 |
+| --- | --- |
 
 ## Context
 

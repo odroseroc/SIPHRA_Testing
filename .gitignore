@@ -2,3 +2,6 @@ data/*
 .idea/
 .ipynb_checkpoints/
 notebooks/root_tests
+# Do not ignore the sample_data folder and its content
+!data/test_data
+!data/test_data/**
