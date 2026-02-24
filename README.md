@@ -12,7 +12,7 @@ Raw datasets are not included in this repository due to repository size constrai
 However, two sample datasets are provided in the ``data/test_data`` directory. These datasets are intended to provide an easy way to test functionalities and correspond to:
 
 * one background radiation acquisition and 
-* one acquisition performed in the presence of a $^{137}$Cs source.
+* one acquisition performed in the presence of a $^{137}$ Cs source.
 
 The corresponding exposure times are reported in the table below:
 
