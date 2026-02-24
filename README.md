@@ -18,7 +18,8 @@ The corresponding exposure times are reported in the table below:
 
 | **Dataset** | **Exposure (s)** |
 | --- | --- |
-| 164.828 | 24.934 |
+| Background | 164.828 
+| Source | 24.934 |
 
 > [!NOTE]
 > The ``file_converters`` directory contains scripts for converting the raw datasets into a readable format. In particular, the ``ODR_DatConverter.py`` provides a comprehensive CLI tool to convert raw files into CSV or PKL formats. 
