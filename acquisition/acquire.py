@@ -1,3 +1,10 @@
+# *****************************************************************************
+# Description: CLI to perform an acquisition executing the dma_to_raw_file
+# script. Automatically stores a json file with the relevant metadata.
+# Written by: Caimin McKenna (UCD), Mózsi Kiss & Oscar Rosero (KTH)
+# ....
+#   Date: 02/2026
+
 import argparse
 import subprocess
 import json
@@ -20,6 +27,8 @@ def parse_args():
     parser.add_argument("--sipm-chs", nargs="*", default='')
     parser.add_argument("--source", type=str, default='[NOT SPECIFIED]')
     parser.add_argument("--source-description", type=str, default='[NOT SPECIFIED]')
+    parser.add_argument("--siphra-config-file", type=str, default='D2a/Ongoing.txt')
+    parser.add_argument("--notes", type=str, default='[NONE]')
 
     return parser.parse_args()
 
@@ -45,6 +54,8 @@ def run_acquisition(args):
     return exposure, output_base
 
 def write_metadata(output_base, exposure, args):
+    with open(args.siphra_config_file) as f:
+        siphra_config = f.readline().strip()
     metadata = {
         "schema-version": "1.0",
 
@@ -61,9 +72,13 @@ def write_metadata(output_base, exposure, args):
             "description": args.source_description,
         },
 
-        "file_info": {
+        "SIPHRA_config":{
+            "cmd_string": siphra_config,
+        },
+
+        "additional_info": {
             "data_file": str(output_base.with_suffix(".dat")),
-            "format": "raw_binary"
+            "notes": args.notes,
         }
     }
 
@@ -75,6 +90,7 @@ def main():
     args = parse_args()
     exposure, output_base = run_acquisition(args)
     write_metadata(output_base, exposure, args)
+    print(f"\n\nAcquisition complete.\n\tWritten to: {output_base}\n\tTotal exposure: {exposure:,.2f} seconds.")
 
 if __name__ == "__main__":
     main()

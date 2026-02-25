@@ -8,6 +8,7 @@
 import pandas as pd
 from typing import TypeVar
 from pathlib import Path
+from metadata import Metadata, MetadataLoader
 
 PathLike = TypeVar("PathLike", str, Path, None)
 
@@ -26,14 +27,24 @@ class SiphraAcquisition:
                  active_chs:int | list[int],
                  exposure_sec:float = 1,
                  sipm_chs:str | None = None,
+                 n_events:int = 100_000,
                  name: str | None = None,):
 
         self.filepath = self._resolve_path(filepath)
+        self.metadataFile = self.filepath.with_suffix(".json")
+        if self.metadataFile.is_file():
+            metadata = MetadataLoader.load(self.metadataFile)
+            exposure_sec = metadata.exposure_sec
+            active_chs = metadata.active_chs
+            sipm_chs = metadata.sipm_chs
+            n_events = metadata.n_events
+        else:
+            self.metadataFile = None
         self.active_chs = self._resolve_active_chs(active_chs)
         self.exposure = exposure_sec
         self.sipm_chs = sipm_chs
+        self.n_events = n_events
         self.name = name
-
 
     def _resolve_path(self, f):
         try:
