@@ -100,7 +100,7 @@ def process_events(f, crystal_code, subtract_baselines=False, get_external=False
 
     return dataset_internal, dataset_external
 
-def dataset_from_arr(arr: numpy.ndarray):
+def dataset_from_arr(arr: np.ndarray):
     '''
     Based on the event array received from d2a_decoder, store the corresponding
     information in a pandas.DataFrame for easier processing.

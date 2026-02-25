@@ -1,7 +1,7 @@
 # *****************************************************************************
 # Description: CLI to perform an acquisition executing the dma_to_raw_file
 # script. Automatically stores a json file with the relevant metadata.
-# Written by: Caimin McKenna (UCD), Mózsi Kiss & Oscar Rosero (KTH)
+# Written by: Oscar Rosero (KTH)
 # ....
 #   Date: 02/2026
 
