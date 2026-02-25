@@ -35,7 +35,7 @@ class SiphraAcquisition:
         if self.metadataFile.is_file():
             # print(f"Metadata file found {self.metadataFile}")
             metadata = MetadataLoader.load(self.metadataFile)
-            print(f"{exposure_sec=}")
+            exposure_sec = metadata.exposure_sec
             active_chs = metadata.active_chs
             sipm_chs = metadata.sipm_chs
             n_events = metadata.n_events
