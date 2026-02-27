@@ -20,15 +20,24 @@ def parse_args():
     parser.add_argument("-o", "--output",
                         required=True,
                         help="Base name for output files (without extension).")
-    parser.add_argument("-c", "--counts", type=int, default=100_000)
-    parser.add_argument("-s", "--size", type=int, default=4095)
-    parser.add_argument("--device", default="/dev/D2A_DMA")
-    parser.add_argument("--active-chs", nargs="*", default=[])
-    parser.add_argument("--sipm-chs", nargs="*", default='')
-    parser.add_argument("--source", type=str, default='[NOT SPECIFIED]')
-    parser.add_argument("--source-description", type=str, default='[NOT SPECIFIED]')
-    parser.add_argument("--siphra-config-file", type=str, default='D2a/Ongoing.txt')
+    parser.add_argument("-c", "--counts", type=int, default=100_000,
+                        help="Total number of events to acquire.")
+    parser.add_argument("--active-chs", nargs="*", type=int, default=[],
+                        help="SIPHRA active channels. Receives all active channel numbers (1 -16) separated by a space.")
+    parser.add_argument("--sipm-chs", nargs="*", default='',
+                        help="Configuration of SIPM channels. One or more strings explaining this configuration.")
+    parser.add_argument("--source", type=str, default='[NOT SPECIFIED]',
+                        help="A single string containing \'Background\' or any radioactive source present")
+    parser.add_argument("--source-description", type=str, default='[NOT SPECIFIED]',
+                        help="A single string.")
     parser.add_argument("--notes", type=str, default='[NONE]')
+    parser.add_argument("--siphra-config-file", type=str, default='D2a/Ongoing.txt',
+                        help="By default, it takes the \'Ongoing.txt\' file in the \'D2a\' directory and writes its contents to the metadata file. If any other configuration is used, the path to the text file containing it must be specified here.")
+    parser.add_argument("-s", "--size", type=int, default=4095,
+                        help="([DO NOT CHANGE UNLESS CHANGING dma_to_raw_file SETTINGS]. Block size. Default is 4095.")
+    parser.add_argument("--device", default="/dev/D2A_DMA",
+                        help = "([DO NOT CHANGE UNLESS CHANGING dma_to_raw_file SETTINGS].")
+
 
     return parser.parse_args()
 
