@@ -182,5 +182,8 @@ class SiphraAcquisition:
         elif file_type == ".pkl":
             return pd.read_pickle(self.filepath)
 
+    def __repr__(self):
+        return f"SIPHRAAcquisition(File: \'{self.filepath.stem}\')"
+
 
 
