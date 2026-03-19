@@ -219,9 +219,9 @@ if __name__ == "__main__":
             data.to_pickle(output_path.with_suffix(suffix_lst[PKL]))
             vprint(f"Wrote:\n\t\"{output_path.with_suffix(suffix_lst[PKL])}\"")
 
-    print("\t\t-----------------------------------------------------------")
-    print("\t\t|               SIPHRA \'.dat\' files converter             |")
-    print("\t\t----------------------------------------------------------- \n")
+    print("-----------------------------------------------------------")
+    print("|               SIPHRA \'.dat\' files converter             |")
+    print("----------------------------------------------------------- \n")
 
     args = build_parser().parse_args()
 
