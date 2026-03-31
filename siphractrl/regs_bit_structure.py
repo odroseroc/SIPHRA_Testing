@@ -16,7 +16,7 @@ CHANNEL = BitStruct(
 )
 
 # Register 0x10: Summing channel configuration registers
-SUMM_CHANNEL = BitStruct(
+SUM_CHANNEL = BitStruct(
     Padding(18),
     'cal_select_channel' / Flag,
     'qc_threshold' / BitsInteger(8),
@@ -89,7 +89,7 @@ PD_MODULES = BitStruct(
 )
 
 # Register 0x16
-CARL_CTRL = BitStruct(
+CAL_CTRL = BitStruct(
     Padding(26),
     'cal_cv_range_low' / Flag,
     'cal_cv_range_mid' / Flag,
@@ -99,6 +99,35 @@ CARL_CTRL = BitStruct(
 )
 
 # Register 0x17
+ch_names = [f'CH_{n}_rofl' for n in range(16, 0, -1)]
 READOUT_FIXED_LIST = BitStruct(
-    Padding(8),
+    Padding(13),
+    'ADC_IN_rofl' / Flag,
+    'SUM_CH_rofl' / Flag,
+    *[name / Flag for name in ch_names],
+    'ADC_PT100_SENSE_rofl' / Flag,
 )
+
+# Register 0x18
+READOUT_MODE = BitStruct(
+    Padding(17),
+    'int_hold_tune' / BitsInteger(5),
+    'int_hold_delay' / BitsInteger(4),
+    'int_hold_source' / BitsInteger(2),
+    'readout_list_mode' / BitsInteger(1),
+    'readout_en_spi_forced_start' / Flag,
+    'readout_en_ext_hold_start' / Flag,
+    'readout_en_int_hold_start' / Flag,
+)
+
+reg_str_lst = [CHANNEL,
+               SUM_CHANNEL,
+               CHANNEL_CONFIG,
+               CHANNEL_CONTROL,
+               ADC_CONFIG,
+               CAL_DAC,
+               PD_MODULES,
+               CAL_CTRL,
+               READOUT_FIXED_LIST,
+               READOUT_MODE,
+               ]

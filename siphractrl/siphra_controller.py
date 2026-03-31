@@ -1,5 +1,6 @@
 from .d2a_lib import *
 from .regs_bit_structure import *
+from collections import namedtuple
 
 CH_ADDRS = []
 SIPHRA_RETURN_SIZE = 15 # bytes. Returned by SIPHRA when D2a.readSIPHRA is called
@@ -7,26 +8,39 @@ SIPHRA_RETURN_SIZE = 15 # bytes. Returned by SIPHRA when D2a.readSIPHRA is calle
 REG_SIZE = 4 # bytes. Size of the bytearray passed to D2a.writeSIPHRA
 
 # Register map classes
+RegField = namedtuple('RegField', ['name', 'size'])
 
 class SIPHRARegister:
     def __init__(self, addr, structure):
         self.addr = addr
         self.structure = structure
+        self.fields = self.structure.subcon.subcons # Includes padding
+        self.field_names = [field.name for field in self.fields if field.name]
+        self.size = sum([field.sizeof() for field in self.fields if field.name]) # Number of significant bits in the register
 
-    def __getitem__(self, param_name):
-        pass
+    def __getitem__(self, idx):
+        '''Returns the name and bit-size of a given field. Index 0 is the padding.'''
+        if idx >= (n_fields:=len(self.fields)) or idx < 0:
+            raise IndexError(f"Index {idx} is out of range for register with {n_fields - 1} fields + padding")
+        if idx == 0:
+            return RegField(name='Padding', size=self.fields[0].sizeof())
+        return RegField(name=self.fields[idx].name, size=self.fields[idx].sizeof())
 
-    def __contains__(self, param_name):
-        '''True if the register has a parameter named parameter.'''
-        params = self.structure.subcon.subcons
-        param_names = [param.name for param in params if param.name]
-        return param_name in param_names
+    def __len__(self):
+        '''Number of fields in this register (excluding padding).'''
+        return len(self.fields) - 1
+
+    def __contains__(self, field_name):
+        '''True if the register has a field named ``field_name``.'''
+        return field_name in self.field_names
 
     def parse(self, value):
         return self.structure.parse(value)
 
-    def set_param(self, param_name, value, reg_current_value):
-        old_register = parse(reg_current_value)
+    def set_param(self, param_name, value, current_content):
+        reg_content = parse(current_content)
+        reg_content[param_name] = value
+        return self.structure.build(reg_content)
 
 
 class SIPHRARegMap:
@@ -36,7 +50,7 @@ class SIPHRARegMap:
         for i in range(1,17):
             self._registers[f"ch{i}"] = SIPHRARegister(i, CHANNEL)
 
-        self._registers["summ"] = SIPHRARegister(0x10, SUMM_CHANNEL)
+        self._registers["chsum"] = SIPHRARegister(0x10, SUM_CHANNEL)
         self._registers["ch_config"] = SIPHRARegister(0x11, CHANNEL_CONFIG)
 
     def __getitem__(self, name):
