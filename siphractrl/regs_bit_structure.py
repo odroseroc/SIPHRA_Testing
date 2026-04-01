@@ -120,7 +120,7 @@ READOUT_MODE = BitStruct(
     'readout_en_int_hold_start' / Flag,
 )
 
-reg_str_lst = [CHANNEL,
+reg_str_lst = [*[CHANNEL]*16,
                SUM_CHANNEL,
                CHANNEL_CONFIG,
                CHANNEL_CONTROL,

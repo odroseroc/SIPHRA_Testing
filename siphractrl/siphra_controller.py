@@ -1,3 +1,5 @@
+from unittest import case
+
 from .d2a_lib import *
 from .regs_bit_structure import *
 from collections import namedtuple
@@ -42,57 +44,37 @@ class SIPHRARegister:
         reg_content[param_name] = value
         return self.structure.build(reg_content)
 
-
-class SIPHRARegMap:
-    def __init__(self):
-        self._registers = {}
-
-        for i in range(1,17):
-            self._registers[f"ch{i}"] = SIPHRARegister(i, CHANNEL)
-
-        self._registers["chsum"] = SIPHRARegister(0x10, SUM_CHANNEL)
-        self._registers["ch_config"] = SIPHRARegister(0x11, CHANNEL_CONFIG)
-
-    def __getitem__(self, name):
-        return self._registers[name]
-
-    def __getattr__(self, name):
-        return self._registers[name]
-
-    def __iter__(self):
-        return iter(self._registers.values())
-
-    def __len__(self):
-        return len(self._registers)
-
-    def __contains__(self, name):
-        return name in self._registers
-
-    def items(self):
-        return self._registers.items()
-
-    def keys(self):
-        return self._registers.keys()
-
-    def values(self):
-        return self._registers.values()
-
-
 class SIPHRA:
-    def __init__(self, d2a: D2a):
-        self._d2a = d2a
-        self._regs = SIPHRARegMap()
+    def __init__(self):
+        self._d2a = D2a()
+        self._regs = {}
 
-    def get_reg_value(self, reg_name, chip='A'):
-        addr = self._regs[reg_name].addr
-        reg_value = self._d2a.readSIPHRA(addr, chip)[SIPHRA_RETURN_SIZE - REG_SIZE:]
-        return reg_value
+        for i in range(1, 17):
+            self._regs[f"ch{i}"] = SIPHRARegister(i, CHANNEL)
 
-    def read_register(self, reg_name, chip='A'):
-        reg_value = self.get_reg_value(reg_name, chip)
-        strct = self._regs[reg_name].structure
-        parsed_struct = strct.parse(reg_value)
-        return parsed_struct
+        self._regs["ch17"] = SIPHRARegister(0x10, SUM_CHANNEL)
+        self._regs["ch_config"] = SIPHRARegister(0x11, CHANNEL_CONFIG)
+        self._regs["ch_control"] = SIPHRARegister(0x12, CHANNEL_CONTROL)
+        self._regs["adc_config"] = SIPHRARegister(0x13, ADC_CONFIG)
+        self._regs["cal_dac"] = SIPHRARegister(0x14, CAL_DAC)
+        self._regs["pd_modules"] = SIPHRARegister(0x15, PD_MODULES)
+        self._regs["cal_ctrl"] = SIPHRARegister(0x16, CAL_CTRL)
+        self._regs["readout_list"] = SIPHRARegister(0x17, READOUT_FIXED_LIST)
+        self._regs["readout_mode"] = SIPHRARegister(0x18, READOUT_MODE)
+
+    def _resolve_reg_id(self, reg_id: str | int) -> tuple[str, int]:
+        """Resolves a register name or address to a (name, addr) tuple."""
+        match reg_id:
+            case str():
+                if reg_id in self._regs:
+                    return reg_id, self._regs[reg_id].addr
+            case int():
+                for name, reg in self._regs.items():
+                    if reg.addr == reg_id:
+                        return name, reg_id
+            case _:
+                raise TypeError(f"reg_id must be str or int, got {type(reg_id).__name__}")
+        raise ValueError(f"{reg_id!r} is not a valid register id")
 
     def _find_reg_containing_param(self, parameter, ch: int=0):
         '''
@@ -101,26 +83,67 @@ class SIPHRA:
         :param ch: If the parameter is in one of the 16+1 channel addresses, this argument is used for disambiguation. ``ch`` is a number between 1 and 16 if the parameter belongs to one of the ``ctrl_ch`` registers; it is 17 if the parameter belongs to the summing channel control register, and is defaulted to 0 if the parameter belongs to any other register.
         :return: The address of the register containing the given parameter.
         '''
-        reg_addr = None
-        if not 0 < ch < 17:
+        addr = None
+        name = None
+        if not 0 <= ch <= 17:
             raise ValueError(f"Channel {ch} is out of range. Use channels 1-16 and 17 for summing channel")
         if ch == 0: # Not a channel register
-            for reg in self._regs:
+            for n, reg in self._regs.items():
                 if parameter in reg:
-                    reg_addr = reg.addr
+                    name = n
+                    addr = reg.addr
         else: # Channel register
-            # Verify that the given register exists
-            register = self._regs[f"ch{ch}"]
-            if parameter in register: reg_addr = register.addr
-        if not reg_addr:
+            # Verify that the given field exists
+            reg = self._regs[f"ch{ch}"]
+            if parameter in reg:
+                addr = reg.addr
+                name = f"ch{ch}"
+        if not addr:
             raise NameError(f"Parameter {parameter} does not exist or the register containing it is not implemented.")
-        return reg_addr
+        return name, addr
 
+    def get_reg_value(self, reg_id, chip='A'):
+        _, addr = self._resolve_reg_id(reg_id)
+        return self._d2a.readSIPHRA(addr, chip)
 
+    def read_register(self, reg_id, chip='A'):
+        name, addr = self._resolve_reg_id(reg_id)
+        reg_value = self._d2a.readSIPHRA(addr, chip)
+        return self._regs[name].parse(reg_value)
 
-    def read_param(self, parameter, ch=0, reg_name=None, chip='A'):
-        if reg_name:
-            reg_addr = self._regs[reg_name].addr
+    def write_register(self, reg_id, value, chip='A'):
+        _, addr = self._resolve_reg_id(reg_id)
+        try:
+            self._d2a.writeSIPHRAwithCheck(addr, chip, value)
+        except Exception as e:
+            print(e)
+            return -1
+        return 0
+
+    def read_param(self, parameter, ch=0, reg_id=None, chip='A'):
+        '''``reg_id`` can be the register name or its address'''
+        if reg_id:
+            name, addr = self._resolve_reg_id(reg_id)
+            if not parameter in _regs[name]:
+                raise NameError(f"Parameter {parameter} does not exist in register {reg_id}.")
         else:
-            reg_addr = self._find_reg_containing_param(parameter, ch)
+            name, addr = self._find_reg_containing_param(parameter, ch)
+
+        return  self.read_register(name, chip=chip)[parameter]
+
+    def write_param(self, parameter, value, ch=0, reg_id=None, chip='A'):
+        if reg_id:
+            name, addr = self._resolve_reg_id(reg_id)
+            if not parameter in _regs[name]:
+                raise NameError(f"Parameter {parameter} does not exist in register {reg_id}.")
+        else:
+            name, addr = self._find_reg_containing_param(parameter, ch)
+
+        reg = self._regs[name]
+        old_value = self.get_reg_value(reg_id, chip=chip)
+        new_value = reg.set_param(parameter, value, old_value)
+        self.write_register(name, new_value, chip=chip)
+
+
+
 
