@@ -30,13 +30,14 @@ def parse_args():
                         help="A single string containing \'Background\' or any radioactive source present")
     parser.add_argument("--source-description", type=str, default='[NOT SPECIFIED]',
                         help="A single string.")
-    parser.add_argument("--notes", type=str, default='[NONE]')
+    parser.add_argument("--notes", type=str, default='[NONE]',
+                        help="A single string.")
     parser.add_argument("--siphra-config-file", type=str, default='D2a/Ongoing.txt',
                         help="By default, it takes the \'Ongoing.txt\' file in the \'D2a\' directory and writes its contents to the metadata file. If any other configuration is used, the path to the text file containing it must be specified here.")
     parser.add_argument("-s", "--size", type=int, default=4095,
-                        help="([DO NOT CHANGE UNLESS CHANGING dma_to_raw_file SETTINGS]. Block size. Default is 4095.")
+                        help="[DO NOT CHANGE UNLESS CHANGING dma_to_raw_file SETTINGS]. Block size. Default is 4095.")
     parser.add_argument("--device", default="/dev/D2A_DMA",
-                        help = "([DO NOT CHANGE UNLESS CHANGING dma_to_raw_file SETTINGS].")
+                        help = "[DO NOT CHANGE UNLESS CHANGING dma_to_raw_file SETTINGS].")
 
 
     return parser.parse_args()
