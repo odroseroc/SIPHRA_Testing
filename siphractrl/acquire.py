@@ -11,6 +11,8 @@ import json
 from pathlib import Path
 import time
 from datetime import datetime, timezone
+from .siphra_controller import SIPHRA
+from .register_interpreter import CMIS_GAIN_VALUES, CI_GAIN_VALUES
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -63,11 +65,25 @@ def run_acquisition(args):
     exposure = end - start
     return exposure, output_base
 
-def write_metadata(output_base, exposure, args):
+def get_SIPHRA_params(schema_version='2.0'):
+    siphra = SIPHRA()
+    params = {}
+    match schema_version:
+        case '2.0':
+            params['cmis_detector_voffset'] = [0.,]
+            params['cmis_detector_ioffset'] = [0.,]
+            params['qc_threshold'] = [0.,]
+            params['enable_triggering'] = [False,]
+            params['cmis_gain'] = 0
+            params['ci_gain'] = 0
+
+
+def create_metadata(output_base, exposure, args):
     with open(args.siphra_config_file) as f:
         siphra_config = f.readline().strip()
+
     metadata = {
-        "schema-version": "1.0",
+        "schema-version": "2.0",
 
         "acquisition": {
             "timestamp_utc": datetime.now(timezone.utc).isoformat(),
@@ -83,6 +99,7 @@ def write_metadata(output_base, exposure, args):
         },
 
         "SIPHRA_config":{
+
             "cmd_string": siphra_config,
         },
 

@@ -40,7 +40,7 @@ class SIPHRARegister:
         return self.structure.parse(value)
 
     def set_param(self, param_name, value, current_content):
-        reg_content = parse(current_content)
+        reg_content = self.parse(current_content)
         reg_content[param_name] = value
         return self.structure.build(reg_content)
 
@@ -124,7 +124,7 @@ class SIPHRA:
         '''``reg_id`` can be the register name or its address'''
         if reg_id:
             name, addr = self._resolve_reg_id(reg_id)
-            if not parameter in _regs[name]:
+            if not parameter in self._regs[name]:
                 raise NameError(f"Parameter {parameter} does not exist in register {reg_id}.")
         else:
             name, addr = self._find_reg_containing_param(parameter, ch)
@@ -134,7 +134,7 @@ class SIPHRA:
     def write_param(self, parameter, value, ch=0, reg_id=None, chip='A'):
         if reg_id:
             name, addr = self._resolve_reg_id(reg_id)
-            if not parameter in _regs[name]:
+            if not parameter in self._regs[name]:
                 raise NameError(f"Parameter {parameter} does not exist in register {reg_id}.")
         else:
             name, addr = self._find_reg_containing_param(parameter, ch)
