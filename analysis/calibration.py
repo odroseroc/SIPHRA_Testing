@@ -1,7 +1,7 @@
 import ROOT
 import numpy as np
 
-def calibration_fit(histogram, energy_ranges, energies):
+def calibration_fit(histogram, energy_ranges, energies, expbg = False):
     """Function to create a linear calibration fit based on a histogram. Returns slope and constant of linear fit. 
     Inputs: Histogram to base calibration on.
     Ranges within which the peaks of the histogram are located, input as a list if tuples. AT LEAST 2 points.
