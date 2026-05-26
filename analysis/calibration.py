@@ -64,3 +64,7 @@ def energy_resolution(hist, peak_ranges, peak_energies):
         resolutions.append(resolution)
 
     return resolutions
+
+def subtract_background(acq_sgnl, acq_bg, name=None, n_chs=None):
+    '''Subtract the background from the signal acquisition and return a
+    subtracted histogram'''
