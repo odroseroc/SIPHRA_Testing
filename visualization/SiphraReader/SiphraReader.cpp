@@ -116,10 +116,10 @@ int main(int argc, char* argv[]){
 
     for(int i = 0; i < 16; i++){
       getline(DataStringStream, DataItem, ',');  DataChannel[i] = atoi(DataItem.c_str());
-      ManualSum += DataChannel[i]/15;
+      ManualSum += DataChannel[i]/16;
     }
     getline(DataStringStream, DataItem, ',');  DataArgMax = atoi(DataItem.c_str());
-    getline(DataStringStream, DataItem, ',');  DataSummed = atoi(DataItem.c_str())/15;
+    getline(DataStringStream, DataItem, ',');  DataSummed = atoi(DataItem.c_str())/16;
     
     //Test print-outs
     // cout << "Detector: " << DataDetector << endl;
