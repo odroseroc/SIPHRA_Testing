@@ -11,6 +11,7 @@ class Metadata:
     active_chs: list[int]
     sipm_chs: str | list[str]
     n_events: int
+    source: str | None
 
 class MetadataLoader:
 
@@ -29,10 +30,12 @@ class MetadataLoader:
     @staticmethod
     def _parse_v1(raw: dict) -> Metadata:
         acq = raw["acquisition"]
+        source = raw["source"]["type"]
 
         return Metadata(
             exposure_sec=acq["exposure_sec"],
             active_chs=[int(ch) for ch in acq["active_chs"]],
             sipm_chs=acq["sipm_chs"],
             n_events=acq["counts"],
+            source=source,
         )

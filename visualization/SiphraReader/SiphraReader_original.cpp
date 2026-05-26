@@ -90,11 +90,11 @@ int main(int argc, char* argv[]){
     ChannelSpectrum[i]->GetYaxis()->SetTitle("Number of counts");
   }
 
-  auto SummedSpectrum = new TH1F("Summed spectrum", "", 4096, 0, 4095);
+  auto SummedSpectrum = new TH1F("Summed spectrum", "", 512, 0, 4*4095);
   SummedSpectrum->GetXaxis()->SetTitle("ADC channel number");
   SummedSpectrum->GetYaxis()->SetTitle("Number of counts");
 
-  auto ManualSumSpectrum = new TH1F("Manual sum", "", 4095, 0, 4095);
+  auto ManualSumSpectrum = new TH1F("Manual sum", "", 512, 0, 4*4095);
   ManualSumSpectrum->GetXaxis()->SetTitle("ADC channel number");
   ManualSumSpectrum->GetYaxis()->SetTitle("Number of counts");
 
@@ -116,10 +116,10 @@ int main(int argc, char* argv[]){
 
     for(int i = 0; i < 16; i++){
       getline(DataStringStream, DataItem, ',');  DataChannel[i] = atoi(DataItem.c_str());
-      ManualSum += DataChannel[i]/16;
+      ManualSum += DataChannel[i];
     }
     getline(DataStringStream, DataItem, ',');  DataArgMax = atoi(DataItem.c_str());
-    getline(DataStringStream, DataItem, ',');  DataSummed = atoi(DataItem.c_str())/16;
+    getline(DataStringStream, DataItem, ',');  DataSummed = atoi(DataItem.c_str());
     
     //Test print-outs
     // cout << "Detector: " << DataDetector << endl;

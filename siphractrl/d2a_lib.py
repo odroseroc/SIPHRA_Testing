@@ -65,7 +65,7 @@ DATA_1 = BitsSwapped(BitStruct(
 
 class D2a:
     '''
-    Contains all fucntions required to interface with hardware devices through OS.
+    Contains all functions required to interface with hardware devices through OS.
     '''
     def __init__(self, uio='/dev/uio0', spi='/dev/spi'):
         try:
