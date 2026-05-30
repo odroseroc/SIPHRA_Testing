@@ -1,6 +1,8 @@
 # *****************************************************************************
 # Description: CLI to perform an acquisition executing the dma_to_raw_file
 # script. Automatically stores a json file with the relevant metadata.
+# Update 26/05 Now there is an option to capture event-timing information
+# in a separate .csv file.
 # Written by: Oscar Rosero (KTH)
 # ....
 #   Date: 02/2026
@@ -42,32 +44,65 @@ def parse_args():
     parser.add_argument("--device", default="/dev/D2A_DMA",
                         help = "[DO NOT CHANGE UNLESS CHANGING dma_to_raw_file SETTINGS].")
     # Capture timing information
-    parser.add_argument("-t", "--time")
-
-
+    parser.add_argument("-t", "--timing", action="store_true",
+                        help = "Capture delta t information about each event from stdout and write them to a .csv file.")
 
     return parser.parse_args()
+
+TIME_PATTERN = re.compile(r"Total time\s*=\s*([\d.eE+\-]+)\s*seconds", re.IGNORECASE)
 
 def run_acquisition(args):
     output_base = Path(args.output).resolve()
     dat_file = output_base.with_suffix(".dat")
 
     cmd = [
+        "stdbuf", "-oL",
         "./dma_to_raw_file",
         "-i", args.device,
         "-o", str(dat_file),
         "-s", str(args.size),
         "-v",
         "-c", str(args.counts),
-        "-b"
+        "-b",
     ]
 
+    deltat_file = output_base.with_name(f"time_{output_base.stem}.csv") if args.timing else None
+
+    # --- DIAGNÓSTICO ---
+    print(f"[DEBUG] args.timing   = {args.timing}")
+    print(f"[DEBUG] deltat_file   = {deltat_file}")
+    # -------------------
+
+    times_seen = 0
+
     start = time.time()
-    subprocess.run(cmd, check=True)
+
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1) as proc:
+        csv_ctx = open(deltat_file, "w", newline="") if deltat_file else None
+        writer = csv.writer(csv_ctx) if csv_ctx else None
+        if writer:
+            writer.writerow(["event_idx", "time_s"])
+
+        try:
+            for line in proc.stdout:
+                sys.stdout.write(line)
+                sys.stdout.flush()
+
+                if writer:
+                    match = TIME_PATTERN.search(line)
+                    if match:
+                        writer.writerow([times_seen, float(match.group(1))])
+                        times_seen += 1
+        finally:
+            if csv_ctx:
+                csv_ctx.close()
+
     end = time.time()
 
-    exposure = end - start
-    return exposure, output_base
+    if proc.returncode != 0:
+        raise subprocess.CalledProcessError(proc.returncode, cmd)
+
+    return end-start, output_base, deltat_file, times_seen
 
 def write_metadata(output_base, exposure, args):
     with open(args.siphra_config_file) as f:
@@ -104,9 +139,26 @@ def write_metadata(output_base, exposure, args):
 
 def main():
     args = parse_args()
-    exposure, output_base = run_acquisition(args)
-    write_metadata(output_base, exposure, args)
+
+    deltat_file, times_seen = None, 0
+    t_start = time.time()
+    output_base = Path(args.output)
+    exposure = None
+
+    print(f'Output base: {args.output}')
+
+    try:
+        exposure, output_base, deltat_file, times_seen = run_acquisition(args)
+    except KeyboardInterrupt:
+        print("\n\n[INTERRUPTED BY USER!]")
+        output_base = Path(args.output).resolve()
+        exposure = time.time() - t_start
+    finally:
+        write_metadata(output_base, exposure, args)
+
     print(f"\n\nAcquisition complete.\n\tWritten to: {output_base}\n\tTotal exposure: {exposure:,.2f} seconds.")
+    if deltat_file:
+        print(f"\tDelta t values: {deltat_file} ({times_seen} events captured)")
 
 if __name__ == "__main__":
     main()
